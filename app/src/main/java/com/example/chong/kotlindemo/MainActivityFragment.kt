@@ -10,6 +10,7 @@ import android.view.*
 import android.widget.Toast
 import com.example.chong.kotlindemo.entity.ChatMsg
 import com.example.chong.kotlindemo.util.getChatMsg
+import com.example.chong.kotlindemo.util.toast
 import kotlinx.android.synthetic.main.item_view.view.*
 
 /**
@@ -22,9 +23,6 @@ class MainActivityFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_main, container, false)
     }
 
-    fun Fragment.toast(toast: String, length: Int = Toast.LENGTH_SHORT) {
-        Toast.makeText(this.context, toast, length).show();
-    }
 
     private lateinit var recycleView: RecyclerView;
     var currentPage: Int = 0;
@@ -45,7 +43,7 @@ class MainActivityFragment : Fragment() {
                     override fun onSingleTapUp(e: MotionEvent?): Boolean {
                         val view = recycleView.findChildViewUnder(e?.x!!, e.y)
                         val childAdapterPosition = recycleView.getChildAdapterPosition(view);
-                        this@MainActivityFragment.toast(list.get(childAdapterPosition).toString())
+                        toast(list.get(childAdapterPosition).toString())
                         return true
                     }
                 })
@@ -53,7 +51,6 @@ class MainActivityFragment : Fragment() {
                 override fun onInterceptTouchEvent(rv: RecyclerView?, e: MotionEvent?): Boolean {
                     return detector.onTouchEvent(e);
                 }
-
             })
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
@@ -86,7 +83,6 @@ class MainActivityFragment : Fragment() {
         override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
             return object : RecyclerView.ViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.item_view, parent, false)) {}
         }
-
     }
 
 }

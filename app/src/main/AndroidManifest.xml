@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.chong.kotlindemo">
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -20,7 +23,34 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ChatActivity"></activity>
+        <activity
+            android:name=".ChatActivity"
+            android:parentActivityName=".MainActivity"
+            android:process=":keepLive"
+            tools:targetApi="jelly_bean" />
+
+        <service
+            android:name=".service.MyJobService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service
+            android:name=".service.MyMessageService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":keepLive" />
+        <service
+            android:name=".service.MyKeepLiveService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":keepLive" />
+        <service
+
+            android:name=".service.MyPushService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=".push" />
+
     </application>
 
 </manifest>

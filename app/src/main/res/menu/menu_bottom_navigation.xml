@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/first"
+        android:icon="@mipmap/ic_menu_emoticons"
+        android:title="首页" />
+    <item
+        android:id="@+id/second"
+        android:icon="@mipmap/ic_menu_star"
+        android:title="二页" />
+    <item
+        android:id="@+id/third"
+        android:icon="@mipmap/ic_menu_start_conversation"
+        android:title="三页" />
+    <!--<item-->
+        <!--android:id="@+id/forth"-->
+        <!--android:icon="@mipmap/ic_menu_cc_am"-->
+        <!--android:title="四页" />-->
+</menu>
