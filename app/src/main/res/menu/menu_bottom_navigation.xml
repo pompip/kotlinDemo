@@ -3,17 +3,17 @@
     <item
         android:id="@+id/first"
         android:icon="@mipmap/ic_menu_emoticons"
-        android:title="首页" />
+        android:title="文档" />
     <item
         android:id="@+id/second"
         android:icon="@mipmap/ic_menu_star"
-        android:title="二页" />
+        android:title="交流" />
     <item
         android:id="@+id/third"
         android:icon="@mipmap/ic_menu_start_conversation"
-        android:title="三页" />
+        android:title="我的" />
     <!--<item-->
-        <!--android:id="@+id/forth"-->
-        <!--android:icon="@mipmap/ic_menu_cc_am"-->
-        <!--android:title="四页" />-->
+    <!--android:id="@+id/forth"-->
+    <!--android:icon="@mipmap/ic_menu_cc_am"-->
+    <!--android:title="四页" />-->
 </menu>

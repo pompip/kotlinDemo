@@ -6,14 +6,10 @@ import android.support.design.internal.BottomNavigationItemView
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.widget.Toast
-import com.example.chong.kotlindemo.entity.ChatMsg
 
 /**
  * Created by Chong on 2018/3/8.
  */
-fun getChatMsg(i: Int): ChatMsg {
-    return ChatMsg("title $i", "content $i", "http://", System.currentTimeMillis())
-}
 
 fun Context.toast(toast: String, length: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, toast, length).show();

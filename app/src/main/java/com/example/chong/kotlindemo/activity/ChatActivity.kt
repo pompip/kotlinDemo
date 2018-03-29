@@ -1,4 +1,4 @@
-package com.example.chong.kotlindemo
+package com.example.chong.kotlindemo.activity
 
 import android.app.NotificationManager
 import android.content.ComponentName
@@ -9,9 +9,9 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.v7.app.AppCompatActivity
 import android.text.TextUtils
+import com.example.chong.kotlindemo.R
 import com.example.chong.kotlindemo.service.MyMessageService
 import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.item_view.*
 
 class ChatActivity : AppCompatActivity() {
     lateinit var conn: ServiceConnection;
@@ -43,6 +43,9 @@ class ChatActivity : AppCompatActivity() {
             }
         }
     }
+
+
+
 
     override fun onDestroy() {
         super.onDestroy()

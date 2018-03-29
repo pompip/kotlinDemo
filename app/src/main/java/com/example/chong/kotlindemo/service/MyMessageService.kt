@@ -8,7 +8,7 @@ import android.os.Build
 import android.os.IBinder
 import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
-import com.example.chong.kotlindemo.ChatActivity
+import com.example.chong.kotlindemo.activity.ChatActivity
 import com.example.chong.kotlindemo.R
 import com.example.chong.kotlindemo.util.NetUtil
 import com.example.chong.kotlindemo.util.loge
@@ -22,9 +22,8 @@ import okio.ByteString
 class MyMessageService : Service() {
     val baseUrl = "http://chongxxx.asuscomm.com:8083/websocket"
     lateinit var webSocket: WebSocket;
-    var isBinded: Boolean = false;
-    val binder: MyMessageBinder = MyMessageBinder();
-    val socketListener = object : WebSocketListener() {
+
+    private val socketListener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket?, response: Response?) {
             sendMessage("from android")
             loge("open ")
@@ -42,11 +41,8 @@ class MyMessageService : Service() {
         }
 
         override fun onMessage(webSocket: WebSocket?, text: String?) {
-            if (isBinded) {
-                binder.callBack(text!!)
-            } else {
-                notifyMsg(text!!)
-            }
+
+            notifyMsg(text!!)
         }
 
         override fun onMessage(webSocket: WebSocket?, bytes: ByteString?) {
@@ -58,16 +54,14 @@ class MyMessageService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        isBinded = true;
+        val binder = MyMessageBinder();
         return binder
     }
 
     override fun onRebind(intent: Intent?) {
-        isBinded = true;
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        isBinded = false;
         return super.onUnbind(intent)
     }
 
@@ -136,6 +130,10 @@ class MyMessageService : Service() {
             mChannel.setVibrationPattern(longArrayOf(50))
             manager.createNotificationChannel(mChannel)
         }
+    }
+
+    inner class MyConnBinder : Binder() {
+        lateinit var callback: (String) -> Unit;
     }
 
     inner class MyMessageBinder : Binder() {

@@ -1,14 +1,29 @@
 package com.example.chong.kotlindemo.util
 
 import android.os.AsyncTask
-import okhttp3.*
+import com.example.chong.kotlindemo.api.ApiServer
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 /**
  * Created by chong on 2018/3/19.
  */
 object NetUtil {
-    val client: OkHttpClient = OkHttpClient.Builder().connectTimeout(5, TimeUnit.SECONDS).build();
+
+    val client: OkHttpClient = OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)).build();
+    val retrofit = Retrofit.Builder().client(client)
+            .baseUrl("http://chongxxx.asuscomm.com:8083/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+
+    val apiServer = retrofit.create(ApiServer::class.java)
 
     fun request(url: String, call: (Response) -> Unit) {
         val task = NetTask(call)
@@ -37,7 +52,4 @@ object NetUtil {
 
 
 }
-
-
-
 

@@ -1,4 +1,4 @@
-package com.example.chong.kotlindemo
+package com.example.chong.kotlindemo.fragment
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -7,9 +7,7 @@ import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
-import android.widget.Toast
-import com.example.chong.kotlindemo.entity.ChatMsg
-import com.example.chong.kotlindemo.util.getChatMsg
+import com.example.chong.kotlindemo.R
 import com.example.chong.kotlindemo.util.toast
 import kotlinx.android.synthetic.main.item_view.view.*
 
@@ -29,13 +27,31 @@ class MainActivityFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         recycleView = view?.findViewById<RecyclerView>(R.id.recycle_view)!!;
-        val list = arrayListOf<ChatMsg>()
+        val objects = object {
+            var title ="title";
+            var content = "content";
+        }
+
+        val list = arrayListOf(objects)
         for (i in 0..9) {
-            list.add(i, getChatMsg(i));
+            list.add(objects);
         }
         recycleView.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-            adapter = MyAdapter(list);
+            adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
+                holder?.itemView?.text_title?.text = list.get(position).title;
+                holder?.itemView?.text_content?.text = list.get(position).content;
+            }
+
+            override fun getItemCount(): Int {
+                return list.size;
+            }
+
+            override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
+                return object : RecyclerView.ViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.item_view, parent, false)) {}
+            }
+        }
             addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
             itemAnimator = DefaultItemAnimator()
             addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
@@ -59,7 +75,7 @@ class MainActivityFragment : Fragment() {
                         currentPage++;
                         for (i in 0..9) {
                             val pos = i + currentPage * 10;
-                            list.add(getChatMsg(pos))
+                            list.add(objects)
                             recyclerView.adapter.notifyItemInserted(pos)
                         }
                     }
@@ -70,20 +86,7 @@ class MainActivityFragment : Fragment() {
 
     }
 
-    class MyAdapter constructor(val list: ArrayList<ChatMsg>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
-            holder?.itemView?.text_title?.text = list.get(position).title;
-            holder?.itemView?.text_content?.text = list.get(position).content;
-        }
 
-        override fun getItemCount(): Int {
-            return list.size;
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
-            return object : RecyclerView.ViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.item_view, parent, false)) {}
-        }
-    }
 
 }
 

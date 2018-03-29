@@ -12,6 +12,30 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val a1 = A()
+        val a2 = a1;
+        println(a2.b)
+        a1.initA("1");
+        println(a2.b)
+
     }
+
+    class A {
+        val b :String
+            get() {
+                return a;
+            }
+
+        var a = "c";
+        fun initA(a: String) {
+            this.a = a;
+
+        }
+        fun printa(){
+            println(a)
+        }
+
+
+    }
+
 }
