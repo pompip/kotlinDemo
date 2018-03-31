@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import android.support.annotation.RequiresApi
 import com.example.chong.kotlindemo.App
+import com.example.chong.kotlindemo.activity.ChatActivity
 import com.example.chong.kotlindemo.activity.MarkdownEditActivity
 import com.example.chong.kotlindemo.activity.MarkdownWebActivity
 import com.example.chong.kotlindemo.entity.MyArticle
@@ -25,6 +26,12 @@ fun toMarkdownEditActivity(context: Context,myArticle: MyArticle){
     val intent = Intent();
     intent.setClass(context,MarkdownEditActivity::class.java);
     intent.putExtra("content",myArticle)
+    context.startActivity(intent);
+}
+
+fun toChatActivity(context: Context,toChatUserId:String){
+    val intent = Intent(context,ChatActivity::class.java)
+    intent.putExtra("userID",toChatUserId);
     context.startActivity(intent);
 }
 

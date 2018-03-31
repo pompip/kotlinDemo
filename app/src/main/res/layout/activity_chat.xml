@@ -3,28 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:lines="10"
-        android:text="TextView" />
-
-
     <Button
-        android:id="@+id/sendButton"
+        android:id="@+id/send_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@id/textView"
-        android:text="send" />
+        android:text="SEND" />
 
     <EditText
-        android:id="@+id/editText"
-        android:layout_width="wrap_content"
+        android:id="@+id/chat_edit_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/textView"
-        android:layout_toLeftOf="@id/sendButton" />
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@id/send_button"
+        android:hint="please type some ..."
+        android:inputType="text" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/chat_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/chat_edit_text"
+        android:layout_alignParentTop="true" />
+
+
 </RelativeLayout>

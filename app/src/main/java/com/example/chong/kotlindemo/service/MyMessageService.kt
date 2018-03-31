@@ -1,29 +1,108 @@
 package com.example.chong.kotlindemo.service
 
-import android.app.*
-import android.content.Context
+import android.app.Service
 import android.content.Intent
-import android.os.Binder
-import android.os.Build
-import android.os.IBinder
-import android.support.annotation.RequiresApi
-import android.support.v4.app.NotificationCompat
-import com.example.chong.kotlindemo.activity.ChatActivity
-import com.example.chong.kotlindemo.R
+import android.os.*
+import com.example.chong.kotlindemo.entity.MsgSystem
+import com.example.chong.kotlindemo.entity.MsgUser
 import com.example.chong.kotlindemo.util.NetUtil
 import com.example.chong.kotlindemo.util.loge
+import com.example.chong.kotlindemo.util.notifyMsg
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import java.util.concurrent.LinkedBlockingDeque
 
 
 class MyMessageService : Service() {
-    val baseUrl = "http://chongxxx.asuscomm.com:8083/websocket"
+    private val baseUrl = "http://chongxxx.asuscomm.com:8083/websocket"
+    private val thread = HandlerThread("webSocket")
     lateinit var webSocket: WebSocket;
+    lateinit var handler: Handler;
+    var gson = Gson();
+    var jsonParser = JsonParser();
+    lateinit var messenger: Messenger;
+    var msgMessenger: Messenger? = null;
+    var onlineMessage: Messenger? = null;
 
-    private val socketListener = object : WebSocketListener() {
+
+    override fun onBind(intent: Intent): IBinder? {
+        timer.start();
+        return messenger.binder;
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        timer.cancel()
+        return super.onUnbind(intent)
+    }
+
+    override fun onCreate() {
+        thread.start()
+        handler = Handler(thread.looper, MyHandlerCallback())
+        messenger = Messenger(handler)
+        handler.post {
+            val request = Request.Builder().url(baseUrl).build()
+            webSocket = NetUtil.client.newWebSocket(request, MyWebSocketListener())
+        }
+
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        webSocket.cancel()
+        thread.quit()
+
+    }
+
+    fun sendMessage(msg: String): Boolean {
+        return webSocket.send(msg)
+    }
+
+    private inner class MyHandlerCallback : Handler.Callback {
+        override fun handleMessage(msg: Message?): Boolean {
+            when (msg?.what) {
+                100 -> onlineMessage = msg.replyTo;
+                200 -> msgMessenger = msg.replyTo;
+            }
+            return true;
+        }
+
+    }
+
+    fun addMsg(msg: MsgUser) {
+        queue.offer(msg)
+        if (msgMessenger == null) {
+            notifyMsg(this@MyMessageService, "你有新的消息了！！")
+        }
+    }
+
+    var queue = LinkedBlockingDeque<MsgUser>()
+    var timer = object :CountDownTimer(Long.MAX_VALUE,1000){
+        override fun onFinish() {
+
+        }
+
+        override fun onTick(millisUntilFinished: Long) {
+            if (msgMessenger != null) {
+                val poll = queue.poll() ?: return
+                loge(this, poll)
+                val message = handler.obtainMessage();
+                val bundle = Bundle()
+                bundle.putParcelable("msg", poll)
+                message.data = bundle;
+                msgMessenger?.send(message);
+            }
+        }
+
+    }
+
+
+    private inner class MyWebSocketListener : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket?, response: Response?) {
             sendMessage("from android")
             loge("open ")
@@ -37,12 +116,27 @@ class MyMessageService : Service() {
         }
 
         override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
-            loge(reason.toString())
+            loge("oncloseing  " + reason.toString())
         }
 
         override fun onMessage(webSocket: WebSocket?, text: String?) {
-
-            notifyMsg(text!!)
+            val parse = jsonParser.parse(text);
+            val cmd = parse.asJsonObject.get("cmd").asInt
+            if (cmd == 1) {
+                val msgUser = gson.fromJson<MsgUser>(text, MsgUser::class.java)
+                addMsg(msgUser);
+            } else if (cmd == 2) {
+                if (onlineMessage != null) {
+                    val msgSystem = gson.fromJson<MsgSystem>(text, MsgSystem::class.java);
+                    val message = Message();
+                    val bundle = Bundle()
+                    bundle.putParcelable("msg", msgSystem);
+                    message.data = bundle;
+                    onlineMessage?.send(message)
+                } else {
+                    notifyMsg(this@MyMessageService, "在线联系人列表更新了！！")
+                }
+            }
         }
 
         override fun onMessage(webSocket: WebSocket?, bytes: ByteString?) {
@@ -50,96 +144,6 @@ class MyMessageService : Service() {
 
         override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
             loge(reason.toString())
-        }
-    }
-
-    override fun onBind(intent: Intent): IBinder? {
-        val binder = MyMessageBinder();
-        return binder
-    }
-
-    override fun onRebind(intent: Intent?) {
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        return super.onUnbind(intent)
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        val request = Request.Builder().url(baseUrl).build()
-        webSocket = NetUtil.client.newWebSocket(request, socketListener)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        webSocket.cancel()
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        loge("onStartComman")
-        return super.onStartCommand(intent, flags, startId)
-    }
-
-    fun sendMessage(msg: String): Boolean {
-        return webSocket.send(msg)
-    }
-
-    var notificationID: Int = 1;
-    val channelID = "com.chong.channel.1" // The user-visible name of the channel.
-
-    fun notifyMsg(msg: String) {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel(manager)
-        }
-        val intent = Intent(applicationContext, ChatActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        val pendingIntent = PendingIntent.getActivity(applicationContext,
-                1,
-                intent,
-                PendingIntent.FLAG_ONE_SHOT)
-
-        val notification = NotificationCompat.Builder(applicationContext, channelID)
-                .setWhen(System.currentTimeMillis())
-                .setAutoCancel(true)
-                .setContentText(msg)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setChannelId(channelID)
-                .setContentIntent(pendingIntent)
-                .setContentTitle("未读消息")
-                .setShowWhen(false)
-                .setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE)
-                .setVibrate(longArrayOf(10))
-                .build()
-        manager.notify(notificationID++, notification)
-
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createChannel(manager: NotificationManager) {
-        val channelName = "my_package_channel"
-        val description = "unReadMessage" // The user-visible description of the channel.
-        val importance = NotificationManager.IMPORTANCE_HIGH
-        var mChannel = manager.getNotificationChannel(channelID)
-        if (mChannel == null) {
-            mChannel = NotificationChannel(channelID, channelName, importance)
-            mChannel.setDescription(description)
-            mChannel.enableVibration(true)
-            mChannel.setVibrationPattern(longArrayOf(50))
-            manager.createNotificationChannel(mChannel)
-        }
-    }
-
-    inner class MyConnBinder : Binder() {
-        lateinit var callback: (String) -> Unit;
-    }
-
-    inner class MyMessageBinder : Binder() {
-        lateinit var callBack: (String) -> Unit;
-        fun sendMsg(msg: String) {
-            sendMessage(msg)
         }
     }
 }

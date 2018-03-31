@@ -4,15 +4,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
-import android.os.Bundle
-import android.os.IBinder
+import android.os.*
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDelegate
 import android.view.Menu
 import android.view.MenuItem
 import com.example.chong.kotlindemo.App
 import com.example.chong.kotlindemo.R
+import com.example.chong.kotlindemo.entity.MsgSystem
 import com.example.chong.kotlindemo.fragment.ArticleListFragment
 import com.example.chong.kotlindemo.fragment.MyCommFragment
 import com.example.chong.kotlindemo.service.MyMessageService
@@ -22,40 +21,46 @@ import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity() {
-    lateinit var conn: ServiceConnection
-
+class MainActivity : AppCompatActivity(), ServiceConnection {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        startService(Intent(applicationContext, MyMessageService::class.java))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             startJobService(this);
         }
         initView()
-        conn = object : ServiceConnection {
-            override fun onServiceDisconnected(name: ComponentName?) {
-            }
+        val intent = Intent(this, MyMessageService::class.java);
+        intent.putExtra("from", 1);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
 
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                val binder = service as MyMessageService.MyMessageBinder;
-
-                binder.callBack = {
-                }
-            }
-        }
-        val intent = Intent(this, MyMessageService::class.java)
-        bindService(intent, conn, Context.BIND_AUTO_CREATE);
 
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(conn)
+        unbindService(this)
     }
 
+    override fun onServiceDisconnected(name: ComponentName?) {
+    }
+
+    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        val messenger = Messenger(service);
+        val message = Message()
+        message.what = 100;
+        message.replyTo = Messenger(Handler({
+
+            val data = it.data
+            data.classLoader = javaClass.classLoader
+            val msgSystem =  data.getParcelable<MsgSystem>("msg")
+
+            MyCommFragment.instances.newComm(msgSystem.onlineUser);
+            return@Handler true;
+        }));
+        messenger.send(message)
+    }
 
     fun toFragment(i: Int) {
         val beginTransaction = supportFragmentManager.beginTransaction()
@@ -105,7 +110,6 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> {
                 App.instances.toNight()
                 recreate()
-
                 return true
             }
             else -> super.onOptionsItemSelected(item)

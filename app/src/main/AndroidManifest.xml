@@ -39,11 +39,21 @@
         <service
             android:name=".service.MyMessageService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:process=":chat" />
 
-        <activity android:name=".activity.MarkdownWebActivity" android:launchMode="singleTask"/>
-        <activity android:name=".activity.MarkdownEditActivity" android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustResize|stateHidden"/>
+        <activity
+            android:name=".activity.MarkdownWebActivity"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".activity.MarkdownEditActivity"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+
+        <service
+            android:name=".service.BindingService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

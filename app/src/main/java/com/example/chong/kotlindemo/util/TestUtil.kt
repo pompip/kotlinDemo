@@ -27,6 +27,10 @@ fun Context.loge(msg: Any) {
     Log.e(this.packageName, msg.toString())
 }
 
+fun Context.loge(clazz:Any,msg:Any){
+    Log.e(clazz.javaClass.name,msg.toString())
+}
+
 @SuppressLint("RestrictedApi")
 fun BottomNavigationItemView.setShift(){
     this.setShiftingMode(false)
