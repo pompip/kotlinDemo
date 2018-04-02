@@ -48,6 +48,9 @@ data class MsgUser(
         var time: Long,
         var msgData: String
 ):Parcelable {
+    constructor() : this(0,"","",System.currentTimeMillis(),"") {
+
+    }
     constructor(parcel: Parcel) : this(
             parcel.readInt(),
             parcel.readString(),

@@ -31,31 +31,36 @@ private fun createChannel(manager: NotificationManager) {
     }
 }
 
-fun notifyMsg(context: Context,msg: String) {
-    val manager =context. getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
+fun notifyMsg(context: Context, msg: String, toUserID: String?) {
+    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         createChannel(manager)
     }
-    val intent = Intent(context, ChatActivity::class.java)
-    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-    val pendingIntent = PendingIntent.getActivity(context,
-            1,
-            intent,
-            PendingIntent.FLAG_ONE_SHOT)
 
-    val notification = NotificationCompat.Builder(context, channelID)
+    val build = NotificationCompat.Builder(context, channelID)
             .setWhen(System.currentTimeMillis())
             .setAutoCancel(true)
             .setContentText(msg)
             .setDefaults(Notification.DEFAULT_ALL)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setChannelId(channelID)
-            .setContentIntent(pendingIntent)
             .setContentTitle("未读消息")
             .setShowWhen(false)
             .setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE)
             .setVibrate(longArrayOf(10))
-            .build()
+
+    if (toUserID != null) {
+        val intent = Intent(context, ChatActivity::class.java)
+        intent.putExtra("userID", toUserID);
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        val pendingIntent = PendingIntent.getActivity(context,
+                1,
+                intent,
+                PendingIntent.FLAG_ONE_SHOT)
+        build.setContentIntent(pendingIntent)
+    }
+
+    val notification = build.build()
     manager.notify(notificationID++, notification)
 
 }

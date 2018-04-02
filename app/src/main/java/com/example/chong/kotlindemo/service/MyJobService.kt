@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Handler
 import android.support.annotation.RequiresApi
 import com.example.chong.kotlindemo.util.loge
-import com.example.chong.kotlindemo.util.toast
 
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -16,7 +15,7 @@ class MyJobService : JobService() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        loge("onStartCommand")
+        loge(this,"onStartCommand")
 
         return Service.START_NOT_STICKY
     }
@@ -28,13 +27,13 @@ class MyJobService : JobService() {
     val handler = Handler(Handler.Callback {
         val param = it.obj as JobParameters
         jobFinished(param, true)
-        startService(Intent(applicationContext, MyMessageService::class.java))
+        startService(Intent(applicationContext, WebSocketService::class.java))
         return@Callback true
     })
 
     override fun onStartJob(params: JobParameters?): Boolean {
         handler.sendMessage(handler.obtainMessage(1,params))
-        loge("onStartJob")
+        loge(this,"onStartJob")
         return true
     }
 

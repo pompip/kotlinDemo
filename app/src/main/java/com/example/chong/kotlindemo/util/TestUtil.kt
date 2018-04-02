@@ -19,13 +19,6 @@ fun Fragment.toast(toast: String, length: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this.context, toast, length).show();
 }
 
-fun Context.logd(msg: Any) {
-    Log.d(this.packageName, msg.toString())
-}
-
-fun Context.loge(msg: Any) {
-    Log.e(this.packageName, msg.toString())
-}
 
 fun Context.loge(clazz:Any,msg:Any){
     Log.e(clazz.javaClass.name,msg.toString())

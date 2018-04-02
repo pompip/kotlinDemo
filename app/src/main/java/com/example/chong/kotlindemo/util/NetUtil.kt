@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit
  * Created by chong on 2018/3/19.
  */
 object NetUtil {
-
+    const val BaseURL = "http://chongxxx.asuscomm.com:8083/"
     val client: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)).build();
     val retrofit = Retrofit.Builder().client(client)
-            .baseUrl("http://chongxxx.asuscomm.com:8083/")
+            .baseUrl(BaseURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build();
 
