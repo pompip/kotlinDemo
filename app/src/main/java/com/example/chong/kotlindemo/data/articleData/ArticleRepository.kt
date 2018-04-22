@@ -1,11 +1,14 @@
 package com.example.chong.kotlindemo.data.articleData
 
 import com.example.chong.kotlindemo.App
+import java.util.*
 
 object ArticleRepository : DataSource {
     private val localDataSource = LocalDataSource(App.application)
     private val remoteDataSource = RemoteDataSource();
-    private val articleMap = HashMap<Long, MyArticle>();
+    private val articleMap = TreeMap<Long, MyArticle>(kotlin.Comparator { o1, o2 ->
+        return@Comparator o2.compareTo(o1)
+    });
     var forceRefresh = false;
 
 
@@ -65,8 +68,9 @@ object ArticleRepository : DataSource {
         } else {
             if (articleMap.values.isEmpty()) {
                 localDataSource.getArticles(object : DataSourceCallback<List<MyArticle>> {
-                    override fun onTasksLoaded(myArticles: List<MyArticle>) {
-                        callback.onTasksLoaded(ArrayList(myArticles))
+                    override fun onTasksLoaded(data: List<MyArticle>) {
+                        refreshCacheMap(data)
+                        callback.onTasksLoaded(ArrayList(articleMap.values))
                     }
 
                     override fun onDataNotAvailable() {
@@ -78,18 +82,20 @@ object ArticleRepository : DataSource {
             }
         }
     }
+    private fun refreshCacheMap(articles:List<MyArticle>){
+        articleMap.clear()
+        articles.forEach {
+            articleMap.put(it.id, it);
+            localDataSource.insertArticle(it)
+        }
+    }
 
     private fun getArticlesFromRemote(callback: DataSourceCallback<List<MyArticle>>) {
         remoteDataSource.getArticles(object : DataSourceCallback<List<MyArticle>> {
-            override fun onTasksLoaded(myArticles: List<MyArticle>) {
-                articleMap.clear()
-
+            override fun onTasksLoaded(data: List<MyArticle>) {
                 localDataSource.deleteAllArticles()
-                myArticles.forEach {
-                    articleMap.put(it.id, it);
-                    localDataSource.insertArticle(it)
-                }
-                callback.onTasksLoaded(ArrayList(myArticles))
+                refreshCacheMap(data)
+                callback.onTasksLoaded(ArrayList(articleMap.values))
             }
 
             override fun onDataNotAvailable() {

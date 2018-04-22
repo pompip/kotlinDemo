@@ -11,7 +11,7 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     val articleListLiveData = MutableLiveData<List<MyArticle>>();
     val articleLiveData = MutableLiveData<MyArticle>();
 
-
+    var refreshResult = MutableLiveData<Boolean>()
     fun loadArticleById(id: Long) {
         ArticleRepository.findArticleById(id,object : DataSourceCallback<MyArticle> {
             override fun onTasksLoaded(myArticle: MyArticle) {
@@ -25,17 +25,6 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
         })
     }
 
-    fun modifyArticle(article: MyArticle){
-        ArticleRepository.modifyArticle(article,object :DataSourceCallback<MyArticle>{
-            override fun onTasksLoaded(data: MyArticle) {
-                articleLiveData.value=data;
-            }
-
-            override fun onDataNotAvailable() {
-
-            }
-        })
-    }
 
     fun forceRefresh() {
         ArticleRepository.forceRefresh = true;
@@ -45,12 +34,14 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     fun loadArticles() {
         ArticleRepository.getArticles(object : DataSourceCallback<List<MyArticle>> {
             override fun onTasksLoaded(myArticles: List<MyArticle>) {
-                articleListLiveData.value = myArticles
                 ArticleRepository.forceRefresh = false;
+                articleListLiveData.value = myArticles
+                refreshResult.value = true;
             }
 
             override fun onDataNotAvailable() {
                 ArticleRepository.forceRefresh = false;
+                refreshResult.value = false;
             }
 
         })

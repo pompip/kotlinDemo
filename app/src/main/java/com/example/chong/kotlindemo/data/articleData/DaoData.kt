@@ -2,7 +2,6 @@ package com.example.chong.kotlindemo.data.articleData
 
 import android.arch.persistence.room.*
 import android.content.Context
-import java.io.Serializable
 
 @Entity(tableName = "myArticle")
 data class MyArticle(
@@ -10,7 +9,7 @@ data class MyArticle(
         @ColumnInfo(name = "articleTitle") var articleTitle: String,
         @ColumnInfo(name = "articleTime") var articleTime: String,
         @ColumnInfo(name = "articleBrief") var articleBrief: String,
-        @ColumnInfo(name = "articleContent") var articleContent: String) : Serializable;
+        @ColumnInfo(name = "articleContent") var articleContent: String) ;
 
 @Dao
 interface ArticleDao {
