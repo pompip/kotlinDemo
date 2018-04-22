@@ -3,15 +3,10 @@ package com.example.chong.kotlindemo.activity
 import android.content.Intent
 import android.os.*
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
-import com.example.chong.kotlindemo.App
 import com.example.chong.kotlindemo.R
 import com.example.chong.kotlindemo.fragment.ArticleListFragment
 import com.example.chong.kotlindemo.fragment.MyCommFragment
 import com.example.chong.kotlindemo.service.BindingService
-import com.example.chong.kotlindemo.service.WebSocketService
-import com.example.chong.kotlindemo.util.loge
 import com.example.chong.kotlindemo.util.startJobService
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -22,7 +17,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        startService(Intent(this,WebSocketService::class.java))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             startJobService(this);
         }
@@ -32,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopService(Intent(this,BindingService::class.java))
     }
 
 
@@ -67,7 +60,15 @@ class MainActivity : AppCompatActivity() {
                 R.id.second
                 -> toFragment(2);
                 R.id.third
-                -> loge(this,3)
+                -> {
+                    val intent = Intent(this,LocalVideoPlayActivity::class.java)
+                    startActivity(intent)
+                }
+                R.id.forth
+                        ->{
+                    val intent = Intent(this,VideoRecorderActivity::class.java)
+                    startActivity(intent)
+                }
             }
             return@setOnNavigationItemSelectedListener true
         }

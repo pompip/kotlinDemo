@@ -17,7 +17,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.example.chong.kotlindemo.R
 import com.example.chong.kotlindemo.dao.DaoUtil
-import com.example.chong.kotlindemo.entity.MsgUser
+import com.example.chong.kotlindemo.entity.MsgEntity
 import com.example.chong.kotlindemo.service.BindingService
 import com.example.chong.kotlindemo.util.loge
 import kotlinx.android.synthetic.main.activity_chat.*
@@ -25,7 +25,7 @@ import kotlinx.android.synthetic.main.item_view.view.*
 import java.util.*
 
 class ChatActivity : AppCompatActivity(), ServiceConnection {
-    var msgList = LinkedList<MsgUser>()
+    var msgList = LinkedList<MsgEntity>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +38,7 @@ class ChatActivity : AppCompatActivity(), ServiceConnection {
         notificationManager.cancelAll()
         initView()
 
-        val list = DaoUtil.query(this,userID);
+        val list = DaoUtil.query(this, userID);
         msgList.addAll(list)
         val intent = Intent(this, BindingService::class.java)
         bindService(intent, this, Context.BIND_AUTO_CREATE)
@@ -47,8 +47,8 @@ class ChatActivity : AppCompatActivity(), ServiceConnection {
             val sendMessage = chat_edit_text.text.toString()
             if (!TextUtils.isEmpty(sendMessage)) {
                 chat_edit_text.setText("", TextView.BufferType.EDITABLE);
-                if (bindingService!=null){
-                    bindingService?.sendMsg(sendMessage,userID);
+                if (bindingService != null) {
+                    bindingService?.sendMsg(sendMessage, userID);
                 }
             }
         }
@@ -83,10 +83,12 @@ class ChatActivity : AppCompatActivity(), ServiceConnection {
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         val myBinder = service as BindingService.MyBinder;
         bindingService = myBinder.getService();
-        bindingService!!.registerUserMsgCallback(intent.getStringExtra("userID") , {
+        bindingService!!.registerUserMsgCallback({
             msgList.addFirst(it)
             loge(this, it)
-            chat_recycler_view.adapter.notifyDataSetChanged()
+            runOnUiThread {
+                chat_recycler_view.adapter.notifyDataSetChanged()
+            }
         })
     }
 

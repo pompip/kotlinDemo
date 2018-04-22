@@ -12,20 +12,20 @@ import com.example.chong.kotlindemo.App
 import com.example.chong.kotlindemo.activity.ChatActivity
 import com.example.chong.kotlindemo.activity.MarkdownEditActivity
 import com.example.chong.kotlindemo.activity.MarkdownWebActivity
-import com.example.chong.kotlindemo.entity.MyArticle
+import com.example.chong.kotlindemo.data.articleData.MyArticle
 import com.example.chong.kotlindemo.service.MyJobService
 
 
-fun toMarkdownWebActivity(context: Context,myArticle: MyArticle){
+fun toMarkdownWebActivity(context: Context,id: Long){
     val intent = Intent();
     intent.setClass(context,MarkdownWebActivity::class.java);
-    intent.putExtra("content",myArticle)
+    intent.putExtra("content",id)
     context.startActivity(intent);
 }
-fun toMarkdownEditActivity(context: Context,myArticle: MyArticle){
+fun toMarkdownEditActivity(context: Context,id: Long){
     val intent = Intent();
     intent.setClass(context,MarkdownEditActivity::class.java);
-    intent.putExtra("content",myArticle)
+    intent.putExtra("content",id)
     context.startActivity(intent);
 }
 

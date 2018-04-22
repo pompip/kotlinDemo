@@ -1,96 +1,73 @@
 package com.example.chong.kotlindemo.service
 
 import android.app.Service
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.*
 import com.example.chong.kotlindemo.dao.DaoUtil
-import com.example.chong.kotlindemo.entity.MsgSystem
-import com.example.chong.kotlindemo.entity.MsgUser
+import com.example.chong.kotlindemo.entity.ChatUserInfo
+import com.example.chong.kotlindemo.entity.MsgCmd
+import com.example.chong.kotlindemo.entity.MsgEntity
+import com.example.chong.kotlindemo.util.NetUtil
 import com.example.chong.kotlindemo.util.loge
 import com.example.chong.kotlindemo.util.notifyMsg
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.LinkedBlockingQueue
-
-class BindingService : Service(), ServiceConnection {
-    var userMsgCallback: ((MsgUser) -> Unit)? = null;
-    var toUserID: String? = null;
-    var handlerCallback = HandlerCallback();
+import com.google.gson.Gson
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 
 
-    fun getOnlineUserList(): List<Pair<String, Int>> {
-        return handlerCallback.onlineUserList;
-    }
+class BindingService : Service() {
+    private val baseUrl = NetUtil.BaseURL + "webSocket/chat"
+    var userMsgCallback: ((MsgEntity) -> Unit)? = null;
+    var meInfo: ChatUserInfo? = null;
+    val gson = Gson()
 
     fun sendMsg(msg: String, toUserID: String) {
-        val msgUser = MsgUser()
-        msgUser.fromUserID = handlerCallback.meID!!;
+        val msgUser = MsgEntity()
         msgUser.toUserID = toUserID;
         msgUser.time = System.currentTimeMillis();
         msgUser.msgData = msg;
-        msgUser.cmd = 1;
+        val message = handler.obtainMessage();
+        message.what = 2000;
+        message.obj = msgUser;
+        handler.sendMessage(message)
 
-        val message = Message()
-        message.what = 200;
-        val b = Bundle();
-        b.putParcelable("msg", msgUser)
-        message.data = b
-
-        messenger?.send(message)
     }
 
-    fun registerUserMsgCallback(userID: String, callback: (MsgUser) -> Unit) {
+    fun registerUserMsgCallback(callback: (MsgEntity) -> Unit) {
         this.userMsgCallback = callback;
-        toUserID = userID;
 
     }
 
     fun unRegisterUserMsgCallback() {
-
         userMsgCallback = null;
-        toUserID = null;
-    }
-
-    var onlineCallback: ((List<Pair<String, Int>>) -> Unit)? = null;
-    fun registerOnlineCallback(callback: (List<Pair<String, Int>>) -> Unit) {
-        this.onlineCallback = callback;
-    }
-
-    fun unRegisterOnlineCallback() {
-        this.onlineCallback = null;
     }
 
     override fun onBind(intent: Intent): IBinder {
         return MyBinder();
     }
 
+    lateinit var handler: Handler;
     override fun onCreate() {
         super.onCreate()
-        val intent = Intent(this, WebSocketService::class.java);
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        loge(this, "onCreate")
+        val thread = HandlerThread("webSocket");
+        thread.start()
+        handler = Handler(thread.looper, MyHandlerCallback())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        loge(this, "onStartCommand")
+        handler.sendMessage(handler.obtainMessage(1000))
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(this)
+        loge(this, "onDestroy")
     }
 
-    var messenger: Messenger? = null;
-    val handler = Handler(handlerCallback)
-
-    override fun onServiceDisconnected(name: ComponentName?) {
-    }
-
-    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-
-        val message = Message()
-        message.what = 100;
-        message.replyTo = Messenger(handler);
-        messenger = Messenger(service);
-        messenger?.send(message)
-    }
 
     inner class MyBinder : Binder() {
         fun getService(): BindingService {
@@ -98,45 +75,79 @@ class BindingService : Service(), ServiceConnection {
         }
     }
 
-    inner class HandlerCallback : Handler.Callback {
-        var meID: String? = null;
-        val onlineUserList = ArrayList<Pair<String, Int>>();
+
+    private inner class MyHandlerCallback : Handler.Callback {
+        var webSocket: WebSocket? = null;
         override fun handleMessage(msg: Message?): Boolean {
-            val data = msg?.data ?: return true
-            data.classLoader = javaClass.classLoader
-            when (msg.what) {
-                10 -> {
-                    val msgSystem = data.getParcelable<MsgUser>("msg")
-                    DaoUtil.insert(this@BindingService, msgSystem)
-                    if (userMsgCallback != null) {
-                        userMsgCallback?.invoke(msgSystem)
+            when (msg?.what) {
+                1000 -> {
+                    val request = Request.Builder().url(baseUrl).build()
+                    if (webSocket == null) {
+                        webSocket = NetUtil.client.newWebSocket(request, MyWebSocketListener())
                     } else {
-                        notifyMsg(this@BindingService, "你有新的消息...", msgSystem.toUserID)
-                    }
-                }
-                20 -> {
-                    val msgSystem = data.getParcelable<MsgSystem>("msg")
-                    meID = msgSystem.meID;
-                    val onlineUser = msgSystem.onlineUser;
-                    if (onlineCallback != null) {
-                        onlineUserList.clear();
-                        onlineUserList.add(Pair("all", 0))
-                        onlineUser.forEach {
-                            if (!meID.equals(it)) {
-                                onlineUserList.add(Pair(it, 0))
-                            }
+                        if (!webSocket?.send(createMsg(2, "android"))!!) {
+                            webSocket = NetUtil.client.newWebSocket(request, MyWebSocketListener())
                         }
-                        onlineCallback?.invoke(onlineUserList)
-                    } else {
-                        notifyMsg(this@BindingService, "有朋友上线了...", null)
                     }
                 }
-                30 -> {
-                    loge(this, if (msg.arg1 == 1) "msg发送成功" else "msg发送失败")
+                2000 -> {
+                    val s = gson.toJson(msg.obj)
+                    webSocket?.send(createMsg(1, s))
+
                 }
             }
             return true;
         }
+    }
 
+    fun createMsg(cmd: Int, body: String): String {
+        val msgCmd = MsgCmd(cmd, body);
+        return gson.toJson(msgCmd)
+    }
+
+
+    inner class MyWebSocketListener : WebSocketListener() {
+        override fun onOpen(webSocket: WebSocket?, response: Response?) {
+            webSocket?.send(createMsg(2, "android"))
+            loge(this, "open ")
+        }
+
+        override fun onFailure(webSocket: WebSocket?, t: Throwable?, response: Response?) {
+            loge(this, "onFailure")
+            t?.printStackTrace()
+        }
+
+        override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
+            loge(this, "onClosed    code:" + code + "  reason:  " + reason)
+        }
+
+        override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
+            loge(this, "onClosing  code:" + code + "  reason:  " + reason)
+        }
+
+        override fun onMessage(webSocket: WebSocket?, text: String?) {
+            loge(this, text.toString())
+            val msgCmd = gson.fromJson(text, MsgCmd::class.java)
+            when (msgCmd.cmd) {
+                1 -> {
+                    val msgEntity = gson.fromJson<MsgEntity>(msgCmd.body, MsgEntity::class.java)
+
+                    DaoUtil.insert(this@BindingService, msgEntity)
+                    if (userMsgCallback != null) {
+                        userMsgCallback?.invoke(msgEntity)
+                    } else {
+                        notifyMsg(this@BindingService, msgEntity.msgData, msgEntity.toUserID);
+                    }
+                }
+                2 -> {
+                    meInfo = gson.fromJson(msgCmd.body, ChatUserInfo::class.java);
+                }
+                3 -> {
+
+                }
+            }
+
+
+        }
     }
 }

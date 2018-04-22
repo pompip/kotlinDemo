@@ -1,6 +1,9 @@
 package com.example.chong.kotlindemo.activity
 
 import android.annotation.SuppressLint
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -9,39 +12,46 @@ import android.view.MenuItem
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.chong.kotlindemo.R
-import com.example.chong.kotlindemo.entity.MyArticle
+import com.example.chong.kotlindemo.data.articleData.MyArticle
 import com.example.chong.kotlindemo.util.toMarkdownEditActivity
+import com.example.chong.kotlindemo.viewMod.MyViewModel
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_markdown_web.*
 
 
 class MarkdownWebActivity : AppCompatActivity() {
 
-    private val myArticle: MyArticle
-        get() {
-            return intent.getSerializableExtra("content") as MyArticle
-        }
+    lateinit var viewModel :MyViewModel;
+    var article:MyArticle?=null;
 
-
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_markdown_web);
-
-    }
-    @SuppressLint("SetJavaScriptEnabled")
-    override fun onResume() {
-        super.onResume()
-        title = myArticle.articleTitle;
         markdown_web.settings.apply {
             javaScriptEnabled = true;
-            allowContentAccess =false;
+            allowContentAccess = false;
         }
-        markdown_web.loadUrl("file:///android_asset/markdownParse.html")
-        markdown_web.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                markdown_web.loadUrl("javascript:parseMarkdown("+ Gson().toJson(myArticle) +")")
+        viewModel = ViewModelProviders
+                .of(this, ViewModelProvider.AndroidViewModelFactory(application))
+                .get("article", MyViewModel::class.java)
+        viewModel.articleLiveData.observe(this, Observer {
+            markdown_web.loadUrl("file:///android_asset/markdownParse.html")
+            markdown_web.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    article = it;
+                    markdown_web.loadUrl("javascript:parseMarkdown(" + Gson().toJson(it) + ")")
+                }
             }
-        }
+        })
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadArticleById(intent.getLongExtra("content",0) )
+
+
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -53,12 +63,14 @@ class MarkdownWebActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.menu_edit, menu)
         return true
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.edit -> {
-                toMarkdownEditActivity(this ,myArticle )
+                toMarkdownEditActivity(this, article?.id!!)
                 return true
-            }else -> super.onOptionsItemSelected(item)
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }

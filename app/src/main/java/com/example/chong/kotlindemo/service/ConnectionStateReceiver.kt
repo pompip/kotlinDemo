@@ -61,7 +61,7 @@ class ConnectionStateReceiver : BroadcastReceiver() {
             }
         }
         if (isConnectivity){
-            context.startService(Intent(context, WebSocketService::class.java))
+            context.startService(Intent(context, BindingService::class.java))
         }
 
     }

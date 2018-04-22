@@ -11,9 +11,9 @@
     <item
         android:id="@+id/third"
         android:icon="@mipmap/ic_menu_start_conversation"
-        android:title="我的" />
-    <!--<item-->
-    <!--android:id="@+id/forth"-->
-    <!--android:icon="@mipmap/ic_menu_cc_am"-->
-    <!--android:title="四页" />-->
+        android:title="视频" />
+    <item
+    android:id="@+id/forth"
+    android:icon="@mipmap/ic_menu_cc_am"
+    android:title="录制" />
 </menu>

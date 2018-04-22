@@ -1,6 +1,7 @@
 package com.example.chong.kotlindemo.util
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.support.design.internal.BottomNavigationItemView
 import android.support.v4.app.Fragment
@@ -20,11 +21,23 @@ fun Fragment.toast(toast: String, length: Int = Toast.LENGTH_SHORT) {
 }
 
 
-fun Context.loge(clazz:Any,msg:Any){
-    Log.e(clazz.javaClass.name,msg.toString())
+fun Context.loge(clazz: Any, msg: Any) {
+    Log.e(clazz.javaClass.name, msg.toString())
 }
 
 @SuppressLint("RestrictedApi")
-fun BottomNavigationItemView.setShift(){
+fun BottomNavigationItemView.setShift() {
     this.setShiftingMode(false)
+}
+
+
+
+fun formattedTime(second: Long, needHH: Boolean = true): String {
+    val h: Long = second / 3600
+    val m: Long = if (needHH) second % 3600 / 60 else second / 60;
+    val s: Long = second % 3600 % 60
+    val hs = if (needHH) if (h < 10) "0$h:" else "$h:" else ""
+    val ms: String = if (m < 10) "0$m" else "$m"
+    val ss = if (s < 10) "0$s" else "$s"
+    return "$hs$ms:$ss"
 }

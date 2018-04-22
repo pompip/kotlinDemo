@@ -27,7 +27,7 @@ class MyJobService : JobService() {
     val handler = Handler(Handler.Callback {
         val param = it.obj as JobParameters
         jobFinished(param, true)
-        startService(Intent(applicationContext, WebSocketService::class.java))
+        startService(Intent(applicationContext, BindingService::class.java))
         return@Callback true
     })
 

@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
  */
 object NetUtil {
     const val BaseURL = "http://chongxxx.asuscomm.com:8083/"
+//    const val BaseURL = "http://i.lovexiangqing.top/"
     val client: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)).build();
@@ -33,7 +34,7 @@ object NetUtil {
 
     class NetTask(private val call: (Response) -> Unit) : AsyncTask<String, Int, Response>() {
 
-        override fun doInBackground(vararg params: String?): Response {
+        override fun doInBackground(vararg params: String): Response {
             val r = Request.Builder().url(params[0]).get().build();
 
             val response = client.newCall(r).execute()
